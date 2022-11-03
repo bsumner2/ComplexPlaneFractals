@@ -5,11 +5,11 @@
 public class ComplexNumber
 {
     /** Real number component.*/
-    private float real;
+    private double real;
     /**Real number coefficient of imaginary number component of Complex number expression, (a + bi) this var = b.*/
-    private float imaginary; 
+    private double imaginary; 
 
-    public ComplexNumber(float realNum, float imagNum)
+    public ComplexNumber(double realNum, double imagNum)
     {
         real = realNum;
         imaginary = imagNum;
@@ -25,8 +25,8 @@ public class ComplexNumber
     {
         if(a==null || b==null) return null;
 
-        float realComponent = a.getReal() + b.getReal();
-        float imaginaryComponent = a.getImaginary() + b.getImaginary();
+        double realComponent = a.getReal() + b.getReal();
+        double imaginaryComponent = a.getImaginary() + b.getImaginary();
         
         return new ComplexNumber(realComponent, imaginaryComponent);
 
@@ -42,8 +42,8 @@ public class ComplexNumber
     {
         if(a==null || b==null) return null;
 
-        float realComponent = a.getReal() - b.getReal();
-        float imaginaryComponent = a.getImaginary() - b.getImaginary();
+        double realComponent = a.getReal() - b.getReal();
+        double imaginaryComponent = a.getImaginary() - b.getImaginary();
         
         return new ComplexNumber(realComponent, imaginaryComponent);
     }
@@ -68,13 +68,13 @@ public class ComplexNumber
          *      = (realComponent) + (imaginaryComponent)*i
          */
 
-        float  c = a.getReal(),
+        double  c = a.getReal(),
                 d = a.getImaginary();
         
-        float  e = b.getReal(),
+        double  e = b.getReal(),
                 f = b.getImaginary();
         
-        float  realComponent = (c * e) - (d * f),
+        double  realComponent = (c * e) - (d * f),
                 imaginaryComponent = (c * f) + (d * e);
         
         return new ComplexNumber(realComponent, imaginaryComponent);
@@ -104,28 +104,28 @@ public class ComplexNumber
          *      = {realComponent} + {imaginaryComponent}*i
          */
 
-        float  c = a.getReal(),
+        double  c = a.getReal(),
                 d = a.getImaginary();
 
-        float  e = b.getReal(),
+        double  e = b.getReal(),
                 f = b.getImaginary();
 
-        float  realComponent = ((c * e) + (d * f))/((e * e) + (f * f)),
+        double  realComponent = ((c * e) + (d * f))/((e * e) + (f * f)),
                 imaginaryComponent = ((d * e) - (c * f))/((e * e) + (f * f));
 
         return new ComplexNumber(realComponent, imaginaryComponent);
     }
 
-    public static float absoluteValueOf(ComplexNumber z)
+    public static double absoluteValueOf(ComplexNumber z)
     {
         if(z==null) return 0.0f;
-        return (float)Math.pow((Math.pow(z.getReal(), 2.0) + Math.pow(z.getImaginary(), 2.0)), 0.5);
+        return (double)Math.pow((Math.pow(z.getReal(), 2.0) + Math.pow(z.getImaginary(), 2.0)), 0.5);
     }
     /**
      * Accessor for the real number component of this complex number.
      * @return Real number decimal value of this complex number.
      */
-    public float getReal() {
+    public double getReal() {
         return real;
     }
 
@@ -133,7 +133,7 @@ public class ComplexNumber
      * Mutator for the real number component.
      * @param imaginary The value to set as the real number, A, in complex number, A+Bi.
      */
-    public void setReal(float real) {
+    public void setReal(double real) {
         this.real = real;
     }
 
@@ -141,7 +141,7 @@ public class ComplexNumber
      * Accessor for the imaginary number component of this complex number.
      * @return Imaginary number's real number coefficient's decimal value of this complex number.
      */
-    public float getImaginary() {
+    public double getImaginary() {
         return imaginary;
     }
 
@@ -149,7 +149,7 @@ public class ComplexNumber
      * Mutator for the imaginary component's real number coefficient.
      * @param imaginary The value to set as the coefficient, B, in complex number, A+Bi.
      */
-    public void setImaginary(float imaginary) {
+    public void setImaginary(double imaginary) {
         this.imaginary = imaginary;
     }
 

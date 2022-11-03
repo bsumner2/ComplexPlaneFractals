@@ -110,7 +110,7 @@ public class Main extends Canvas
 
 
                 
-
+                m.printGraphStatistics();
                 m.repaint();
             }
             else

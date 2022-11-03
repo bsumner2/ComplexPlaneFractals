@@ -203,8 +203,9 @@ public class Main extends Canvas
     public void printGraphStatistics()
     {
         System.out.println("Graph domain:\n\t"+
-                           "Real Axis (X Axis):\t\t\t" + (xOffset - domain) + " < x < "  + (xOffset + domain) + "\n\t" +
-                           "Imaginary Axis (Y Axis):\t\t" + (yOffset - domain) + " < y < " + (yOffset + domain) + "\n");
+                           "Real Axis (X Axis):\t\t\t" + (-xOffset - domain) + " < x < "  + (domain - xOffset) + "\n\t" +
+                           "Imaginary Axis (Y Axis):\t\t" + (-yOffset - domain) + " < y < " + (domain - yOffset) + "\n\t" +
+                           "Domain size:\t\t\t\t" + domain);
     }
 
 

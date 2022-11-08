@@ -13,7 +13,7 @@ public class Main extends Canvas
     
     private static final ComplexNumber COMPLEX_ZERO = new ComplexNumber(0d, 0d);
 
-    private static final ComplexNumber DEFAULT = new ComplexNumber(0.285d, 0.01d);
+    private static final ComplexNumber DEFAULT_JULIA_SET_CONST = new ComplexNumber(0.285d, 0.01d);
 
     private static final int DEF_MIN_ITERATION_AMT = 100;
     
@@ -43,19 +43,11 @@ public class Main extends Canvas
     {
         Main m = new Main(1050, 1050, 100, 3d, 0d, 0d);
 
-        String prompt = "_PLACEHOLDER_";
-        while(!prompt.equalsIgnoreCase("quit"))
+        boolean quit = false;
+        while(!quit)
         {
-            if(m.mode=='j')
-                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
-                "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit , \'c\' = change Julia set constant, C" +
-                "Enter character keycode: ");
-            else
-                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
-                             "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit\n" +
-                             "Enter character keycode: ");
-            char keycode = keyboard.next().charAt(0);
-            keyboard.nextLine();
+
+            char keycode = userChooseMenuMode(m);
 
             if(m.mode=='j' && keycode=='c')
             {
@@ -66,21 +58,15 @@ public class Main extends Canvas
             switch(keycode)
             {
                 case 'q':
-                    prompt = "quit";
+                    quit = true;
+                    System.out.println("Thank you for your time! Close the GUI, too, to fully close the program.");
                     continue;
                 case 'i':
-                    System.out.println("Enter new maximum iteration count: ");
-                    int iterationNew = keyboard.nextInt();
-                    keyboard.nextLine();
-                    m.setIterations(iterationNew);
-                    System.out.println("The new iteration count is: " + m.iterations);
-                    m.defaultZoomAndOffset();
-                    m.repaint();
+                    userChangeIterationCount(m);
                     continue;
                 case 'm':
-                    System.out.print("What fractal mode? Options include: \"mandelbrot\" , \"julia\", \"burning ship\". (More coming soon!)\nEnter mode name: ");
-                    prompt = keyboard.nextLine();
-                    break;
+                    userChooseFractalMode(m);
+                    continue;
                 case 'n':
                 System.out.println("Entering navigation mode.");
                     break;
@@ -89,130 +75,208 @@ public class Main extends Canvas
                     continue;        
             }
 
-
-
-            if(keycode=='m')
-            {
-                prompt = prompt.toLowerCase();
-                switch(prompt)
-                {
-                    case "mandelbrot":
-                    case "burning ship":
-                    case "burning_ship":
-                    case "burning-ship":
-                        m.mode = prompt.charAt(0);
-                        System.out.println("Switching to " + prompt + " render mode.");
-                        m.defaultZoomAndOffset();
-                        m.changeTitle();
-                        m.repaint();
-                        continue;
-                    case "julia":
-                        m.mode = prompt.charAt(0);
-                        setJuliaConst(m);
-                        continue;
-                    // TODO: Pick up from here.
-                    
-                    
-
-                    default:
-                        System.out.println("Invalid entry. Please try again.");
-                        continue;
-
-
-                }
-            }
             if(keycode=='n') //Should work without this if statement, but this is just as a safeguard.
             {
-                prompt = "PLACEHOLDER";
-                while(!prompt.equalsIgnoreCase("exit"))
-                {
-                    System.out.print("\nNavigation keywords: \"move <left/right/up/down>\" \"zoom <in/out>\".\n(Or enter,\"exit\" to go to main mode menu) Enter command: ");
-                    prompt = keyboard.nextLine();
-                    if(prompt.toLowerCase().contains("exit"))
-                    {
-                        prompt = "exit";
-                        continue;
-                    }
-                    else if(prompt.contains(" "))
-                    {
-                        String[] navArgs = prompt.split(" ");
-                        if(navArgs.length!=3)
-                        {
-                            System.out.println("Invalid arg count. Please try again.");
-                            continue;
-                        }
-                        Scanner doubleParse = new Scanner(navArgs[2]);
-                        if(!doubleParse.hasNextDouble())
-                        {
-                            System.out.println("Invalid scalar arg. Please try again.");
-                            continue;
-                        }
-                        double scalarArg = doubleParse.nextDouble();
-                        doubleParse.close();
-
-                        if(navArgs[0].equalsIgnoreCase("move"))
-                        {
-
-                            switch(navArgs[1])
-                            {
-                                case "up":
-                                    m.yOffset -= scalarArg;
-                                    break;
-                                case "down":
-                                    m.yOffset += scalarArg;
-                                    break;
-                                case "right":
-                                    m.xOffset -= scalarArg;
-                                    break;
-                                case "left":
-                                    m.xOffset += scalarArg;
-                                    break;
-                                default:
-                                    System.out.println("Invalid direction arg. Please try again.");
-                                    continue;
-                            
-                            }
-                        }
-                        else if(navArgs[0].equalsIgnoreCase("zoom"))
-                        {
-                            boolean zoomIn = navArgs[1].equalsIgnoreCase("in");
-                            if(zoomIn || navArgs[1].equalsIgnoreCase("out"))
-                                m.domain*= (zoomIn) ? (1/scalarArg) : scalarArg;
-                        }
-                        else
-                        {
-                            System.out.println("Invalid initial command arg. Please try again.");
-                            continue;
-                        }
-                        m.printGraphStatistics();
-                        m.repaint();
-                    }
-                }
+                userNavigateMode(m);
             }
             else
             {
                 System.out.println("Invalid entry. please try again.");
                 continue;
             }
-                
+        }
+        
+        //If loop finished, then program closed.
+        keyboard.close();
+        System.exit(0);
+    }
 
+    private static void userNavigateMode(Main m)
+    {
+        boolean exit = false;
+        while(!exit)
+        {
+            System.out.print("\nNavigation keywords: \"move <left/right/up/down>\" \"zoom <in/out>\".\n(Or enter,\"exit\" to go to main mode menu) Enter command: ");
+            String prompt = keyboard.nextLine();
+            if(prompt.toLowerCase().contains("exit"))
+            {
+                exit = true;
+                continue;
+            }
+            else if(prompt.contains(" "))
+            {
+                String[] navArgs = prompt.split(" ");
+                if(navArgs.length!=3)
+                {
+                    System.out.println("Invalid arg count. Please try again.");
+                    continue;
+                }
+                Scanner doubleParse = new Scanner(navArgs[2]);
+                if(!doubleParse.hasNextDouble())
+                {
+                    System.out.println("Invalid scalar arg. Please try again.");
+                    continue;
+                }
+                double scalarArg = doubleParse.nextDouble();
+                doubleParse.close();
+
+                if(navArgs[0].equalsIgnoreCase("move"))
+                {
+
+                    switch(navArgs[1])
+                    {
+                        case "up":
+                            m.yOffset -= scalarArg;
+                            break;
+                        case "down":
+                            m.yOffset += scalarArg;
+                            break;
+                        case "right":
+                            m.xOffset -= scalarArg;
+                            break;
+                        case "left":
+                            m.xOffset += scalarArg;
+                            break;
+                        default:
+                            System.out.println("Invalid direction arg. Please try again.");
+                            continue;
+                    
+                    }
+                }
+                else if(navArgs[0].equalsIgnoreCase("zoom"))
+                {
+                    boolean zoomIn = navArgs[1].equalsIgnoreCase("in");
+                    if(zoomIn || navArgs[1].equalsIgnoreCase("out"))
+                        m.domain*= (zoomIn) ? (1d/scalarArg) : scalarArg;
+                }
+                else
+                {
+                    System.out.println("Invalid initial command arg. Please try again.");
+                    continue;
+                }
+                m.printGraphStatistics();
+                m.repaint();
+            }
+        }
+    }
+
+    private static char userChooseMenuMode(Main m)
+    {
+        boolean invalidMode = true; //placeholder init value
+        char keycode = 0; //placeholder init value.
+        while(invalidMode)
+        {
+            if(m.mode=='j')
+                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
+                "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit , \'c\' = change Julia set constant, C" +
+                "Enter character keycode: ");
+            else
+                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
+                            "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit\n" +
+                            "Enter character keycode: ");
             
+            String modeEntry = keyboard.next();
+            keyboard.nextLine();
+            if(modeEntry.length()!=1)
+            {
+                System.out.println("Invalid entry. Mode must be 1 char in length. Please try again.");
+                continue;
+            }
+            invalidMode = false;
+            keycode = modeEntry.charAt(0);
+        }
+        return keycode;
+    }
+
+    private static void userChooseFractalMode(Main m)
+    {
+        boolean invalidEntry = true;
+        while(invalidEntry)
+        {
+            System.out.print("What fractal mode? Options include: \"mandelbrot\" , \"julia\", \"burning ship\". (More coming soon!)\nEnter mode name: ");
+            String prompt = keyboard.nextLine().toLowerCase();
+            switch(prompt)
+            {
+                case "mandelbrot":
+                case "burning ship":
+                case "burning_ship":
+                case "burning-ship":
+                    m.mode = prompt.charAt(0);
+                    System.out.println("Switching to " + prompt + " render mode.");
+                    m.defaultZoomAndOffset();
+                    m.changeTitle();
+                    m.repaint();
+                    invalidEntry = false;
+                    continue;
+                case "julia":
+                    m.mode = prompt.charAt(0);
+                    setJuliaConst(m);
+                    invalidEntry = false;
+                    continue;
+                default:
+                    System.out.println("Invalid entry. Please try again.");
+                    continue;
+            }
         }
     }
     
+    private static void userChangeIterationCount(Main m)
+    {
+        boolean invalidEntry = true;
+        while(invalidEntry)
+        {
+            System.out.println("Enter new maximum iteration count (current count = " + m.iterations + "): ");
+            String entry = keyboard.nextLine();
+            Scanner intParse = new Scanner(entry);
+            if(!intParse.hasNextInt())
+            {
+                System.out.println("Invalid entry. Please enter a whole number (Ex: \"1000\")\n");
+                continue;
+            }
+            else
+                invalidEntry = false;
+            int iterationNew = intParse.nextInt();
+            intParse.close();
+            m.setIterations(iterationNew);
+            System.out.println("The new iteration count is: " + m.iterations);
+            m.changeTitle();
+            m.repaint();
+        }
+    }
+
     private static void setJuliaConst(Main m)
     {
-        System.out.print("Enter the equation constant's Complex Components i.e. its real number component and the imaginary number's coefficient. Starting with..."+
-        "\nReal Number (ex:  −0.7269): ");
-        double inputReal = keyboard.nextDouble();
-        keyboard.nextLine();
-        System.out.print("Imaginary Number (Exclude i) (ex:  0.1889): ");
-        double inputImaginary = keyboard.nextDouble();
-        keyboard.nextLine();
-        m.juliaSetConst = new ComplexNumber(inputReal, inputImaginary);
-        m.defaultZoomAndOffset();
-        m.changeTitle();
-        m.repaint();
+        boolean invalidEntry = true;
+        while(invalidEntry)
+        {
+            System.out.print("Enter the equation constant's Complex Components i.e. its real number component and the imaginary number's coefficient. Starting with..."+
+            "\nReal Number (ex:  −0.7269): ");
+            String realInput = keyboard.nextLine();
+            Scanner doubleParser = new Scanner(realInput);
+            if(!doubleParser.hasNextDouble())
+            {
+                System.out.println("Invalid entry please enter your number as a decimal number. (Examples: (Positive Number): \"1.203\" (Negative Number): \"-1.203\")\n");
+                continue;
+            }
+            double inputReal = doubleParser.nextDouble();
+            doubleParser.close();
+            System.out.print("Imaginary Number (Exclude i) (ex:  0.1889): ");
+            String imaginaryInput = keyboard.nextLine();
+            doubleParser = new Scanner(imaginaryInput);
+            if(!doubleParser.hasNextDouble())
+            {
+                System.out.println("Invalid entry please enter your number as a decimal number.(Examples: (Positive Number): \"1.203\" (Negative Number): \"-1.203\")\n");
+                continue;
+            }
+            else
+                invalidEntry = false;
+            double inputImaginary = doubleParser.nextDouble();
+            doubleParser.close();
+            m.juliaSetConst = new ComplexNumber(inputReal, inputImaginary);
+            m.defaultZoomAndOffset();
+            m.changeTitle();
+            m.repaint();
+        }
     }
 
     public Main(int aWidth, int aHeight, int numIterations, double aDomain, double anXOffset , double aYOffset)
@@ -220,6 +284,7 @@ public class Main extends Canvas
         mode = 'm';
         xOffset = anXOffset;
         yOffset = aYOffset;
+        juliaSetConst = DEFAULT_JULIA_SET_CONST;
         setWidth(aWidth);
         setHeight(aHeight);
         setIterations(numIterations);
@@ -269,7 +334,8 @@ public class Main extends Canvas
             for(int j = 0; j < height; j++)
             {
                 double realAKA_X = (((double)i - ((double)width/2.0d))/((double)width/domain))-xOffset;
-                double imaginaryAKA_Y = (((double)j - ((double)height/2.0d))/((double)height/domain))-yOffset;
+                double imaginaryAKA_Y = ((((double)height/2.0d) - (double)j)/((double)height/domain))-yOffset;
+                imaginaryAKA_Y *= (mode=='b') ? -1d : 1d; //Inverting fractal vertically if rendering the Burning Ship Fractal
                 /*
                 ComplexNumber   prevZ   = new ComplexNumber(0,0),
                                 currZ   = new ComplexNumber(0,0),
@@ -329,9 +395,11 @@ public class Main extends Canvas
     
     public void printGraphStatistics()
     {
+        double xOrigin = 0d-xOffset, yOrigin = 0d-yOffset;
+
         System.out.println("Origin Coordinates:\n\t" +
-                           "Real Axis (X Axis): x =\t\t" + (-xOffset) + "\n\t" +
-                           "Imaginary Axis (Y Axis): y =\t" + (-yOffset));
+                           "Real Axis (X Axis): x =\t\t" + xOrigin + "\n\t" +
+                           "Imaginary Axis (Y Axis): y =\t" + yOrigin); 
                            
         System.out.println("Graph domain:\n\t"+
                            "Real Axis (X Axis):\t\t" + (-xOffset - domain) + " < x < "  + (domain - xOffset) + "\n\t" +

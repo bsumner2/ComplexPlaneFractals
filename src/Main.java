@@ -10,15 +10,10 @@ public class Main extends Canvas
 {
 
     private static Scanner keyboard = new Scanner(System.in);
-
-    private static final long DEF_MIN_HEXRGB_SEED = 0x0000FF;
-
-    private static final long DEF_MAX_HEXRGB_SEED = 0xFFFFFFFFFL;
     
-
     private static final ComplexNumber COMPLEX_ZERO = new ComplexNumber(0d, 0d);
 
-    private static final long DEF_HEXRGB_SEED = 0xFF00FF00FL;
+    private static final ComplexNumber DEFAULT = new ComplexNumber(0.285d, 0.01d);
 
     private static final int DEF_MIN_ITERATION_AMT = 100;
     
@@ -39,79 +34,160 @@ public class Main extends Canvas
     
     JFrame frame;
     int iterations, width, height;
-    long hexRGBSeed;
     double domain, xOffset, yOffset;
     BufferedImage set;
-    
+    char mode;
+    ComplexNumber juliaSetConst;
 
     public static void main(String[] args) //Argument syntax is $1 = square window length $2 = number of iterations,  $3 = graph domain, $4 = hexRGB seed. (java Main <<squareWindowLength>> <<numIterations>> <<graph domain as a doubleing point number>> <<Hexadecimal RGB value as seed>>)
     {
-        Main m = new Main(1050, 1050, 1000, 3d, 0d, 0d, 0x00FFFFFFL);
+        Main m = new Main(1050, 1050, 100, 3d, 0d, 0d);
 
-        String prompt = "null";
+        String prompt = "_PLACEHOLDER_";
         while(!prompt.equalsIgnoreCase("quit"))
         {
-            System.out.print("\n\nNavigation keywords: \"move <left/right/up/down>\" \"zoom <in/out>\"\nEnter \"quit\" at any command prompt to quit application.\nCommand: ");
-            prompt = keyboard.nextLine();
-            if(prompt.equalsIgnoreCase("quit"))
-                continue;
-            else if(prompt.contains(" "))
+            if(m.mode=='j')
+                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
+                "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit , \'c\' = change Julia set constant, C" +
+                "Enter character keycode: ");
+            else
+                System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
+                             "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit\n" +
+                             "Enter character keycode: ");
+            char keycode = keyboard.next().charAt(0);
+            keyboard.nextLine();
+
+            if(m.mode=='j' && keycode=='c')
             {
-                String[] navArgs = prompt.split(" ");
-                if(navArgs.length!=3)
-                {
-                    System.out.println("Invalid arg count. Please try again.");
-                    continue;
-                }
-                Scanner doubleParse = new Scanner(navArgs[2]);
-                if(!doubleParse.hasNextDouble())
-                {
-                    System.out.println("Invalid scalar arg. Please try again.");
-                    continue;
-                }
-                double scalarArg = doubleParse.nextDouble();
-                doubleParse.close();
+                setJuliaConst(m);
+                continue;
+            }
 
-                if(navArgs[0].equalsIgnoreCase("move"))
-                {
+            switch(keycode)
+            {
+                case 'q':
+                    prompt = "quit";
+                    continue;
+                case 'i':
+                    System.out.println("Enter new maximum iteration count: ");
+                    int iterationNew = keyboard.nextInt();
+                    keyboard.nextLine();
+                    m.setIterations(iterationNew);
+                    System.out.println("The new iteration count is: " + m.iterations);
+                    m.defaultZoomAndOffset();
+                    m.repaint();
+                    continue;
+                case 'm':
+                    System.out.print("What fractal mode? Options include: \"mandelbrot\" , \"julia\", \"burning ship\". (More coming soon!)\nEnter mode name: ");
+                    prompt = keyboard.nextLine();
+                    break;
+                case 'n':
+                System.out.println("Entering navigation mode.");
+                    break;
+                default:
+                    System.out.println("Invalid keycode");
+                    continue;        
+            }
 
-                    switch(navArgs[1])
-                    {
-                        case "up":
-                            m.yOffset -= scalarArg;
-                            break;
-                        case "down":
-                            m.yOffset += scalarArg;
-                            break;
-                        case "right":
-                            m.xOffset -= scalarArg;
-                            break;
-                        case "left":
-                            m.xOffset += scalarArg;
-                            break;
-                        default:
-                            System.out.println("Invalid direction arg. Please try again.");
-                            continue;
+
+
+            if(keycode=='m')
+            {
+                prompt = prompt.toLowerCase();
+                switch(prompt)
+                {
+                    case "mandelbrot":
+                    case "burning ship":
+                    case "burning_ship":
+                    case "burning-ship":
+                        m.mode = prompt.charAt(0);
+                        System.out.println("Switching to " + prompt + " render mode.");
+                        m.defaultZoomAndOffset();
+                        m.changeTitle();
+                        m.repaint();
+                        continue;
+                    case "julia":
+                        m.mode = prompt.charAt(0);
+                        setJuliaConst(m);
+                        continue;
+                    // TODO: Pick up from here.
                     
+                    
+
+                    default:
+                        System.out.println("Invalid entry. Please try again.");
+                        continue;
+
+
+                }
+            }
+            if(keycode=='n') //Should work without this if statement, but this is just as a safeguard.
+            {
+                prompt = "PLACEHOLDER";
+                while(!prompt.equalsIgnoreCase("exit"))
+                {
+                    System.out.print("\nNavigation keywords: \"move <left/right/up/down>\" \"zoom <in/out>\".\n(Or enter,\"exit\" to go to main mode menu) Enter command: ");
+                    prompt = keyboard.nextLine();
+                    if(prompt.toLowerCase().contains("exit"))
+                    {
+                        prompt = "exit";
+                        continue;
+                    }
+                    else if(prompt.contains(" "))
+                    {
+                        String[] navArgs = prompt.split(" ");
+                        if(navArgs.length!=3)
+                        {
+                            System.out.println("Invalid arg count. Please try again.");
+                            continue;
+                        }
+                        Scanner doubleParse = new Scanner(navArgs[2]);
+                        if(!doubleParse.hasNextDouble())
+                        {
+                            System.out.println("Invalid scalar arg. Please try again.");
+                            continue;
+                        }
+                        double scalarArg = doubleParse.nextDouble();
+                        doubleParse.close();
+
+                        if(navArgs[0].equalsIgnoreCase("move"))
+                        {
+
+                            switch(navArgs[1])
+                            {
+                                case "up":
+                                    m.yOffset -= scalarArg;
+                                    break;
+                                case "down":
+                                    m.yOffset += scalarArg;
+                                    break;
+                                case "right":
+                                    m.xOffset -= scalarArg;
+                                    break;
+                                case "left":
+                                    m.xOffset += scalarArg;
+                                    break;
+                                default:
+                                    System.out.println("Invalid direction arg. Please try again.");
+                                    continue;
+                            
+                            }
+                        }
+                        else if(navArgs[0].equalsIgnoreCase("zoom"))
+                        {
+                            boolean zoomIn = navArgs[1].equalsIgnoreCase("in");
+                            if(zoomIn || navArgs[1].equalsIgnoreCase("out"))
+                                m.domain*= (zoomIn) ? (1/scalarArg) : scalarArg;
+                        }
+                        else
+                        {
+                            System.out.println("Invalid initial command arg. Please try again.");
+                            continue;
+                        }
+                        m.printGraphStatistics();
+                        m.repaint();
                     }
                 }
-                else if(navArgs[0].equalsIgnoreCase("zoom"))
-                {
-                    boolean zoomIn = navArgs[1].equalsIgnoreCase("in");
-                    if(zoomIn || navArgs[1].equalsIgnoreCase("out"))
-                        m.domain*= (zoomIn) ? (1/scalarArg) : scalarArg;
-                }
-                else
-                {
-                    System.out.println("Invalid initial command arg. Please try again.");
-                    continue;
-                }
-                
-
-
-                
-                m.printGraphStatistics();
-                m.repaint();
             }
             else
             {
@@ -124,88 +200,143 @@ public class Main extends Canvas
         }
     }
     
-
-    public Main(int aWidth, int aHeight, int numIterations, double aDomain, double anXOffset , double aYOffset, long aHexRGBSeed)
+    private static void setJuliaConst(Main m)
     {
+        System.out.print("Enter the equation constant's Complex Components i.e. its real number component and the imaginary number's coefficient. Starting with..."+
+        "\nReal Number (ex:  −0.7269): ");
+        double inputReal = keyboard.nextDouble();
+        keyboard.nextLine();
+        System.out.print("Imaginary Number (Exclude i) (ex:  0.1889): ");
+        double inputImaginary = keyboard.nextDouble();
+        keyboard.nextLine();
+        m.juliaSetConst = new ComplexNumber(inputReal, inputImaginary);
+        m.defaultZoomAndOffset();
+        m.changeTitle();
+        m.repaint();
+    }
+
+    public Main(int aWidth, int aHeight, int numIterations, double aDomain, double anXOffset , double aYOffset)
+    {
+        mode = 'm';
         xOffset = anXOffset;
         yOffset = aYOffset;
-        width = (aWidth>=DEF_MIN_WIDTH) ? aWidth : DEF_WIDTH;
-        height = (aHeight >= DEF_MIN_HEIGHT) ? aHeight : DEF_HEIGHT;
-        iterations = (numIterations>=DEF_MIN_ITERATION_AMT && numIterations<=DEF_MAX_ITERATION_AMT) ? numIterations : DEF_ITERATION_AMT;
-        hexRGBSeed = (aHexRGBSeed >= DEF_MIN_HEXRGB_SEED && aHexRGBSeed<=DEF_MAX_HEXRGB_SEED) ? aHexRGBSeed : DEF_HEXRGB_SEED; //TODO: UNCOMMENT THIS FOLLOWING LINE IF THIS DOESN'T WORK TOO WELL
-        //hexRGBSeed = (aHexRGBSeed >= DEF_MIN_HEXRGB_SEED && aHexRGBSeed <= DEF_MAX_HEXRGB_SEED) ? aHexRGBSeed : DEF_HEXRGB_SEED;
+        setWidth(aWidth);
+        setHeight(aHeight);
+        setIterations(numIterations);
+        setDomain(aDomain);
         
-        //DONE LIKE THIS BECAUSE LARGER DOMAIN NUMBER MEANS CLOSER DOMAIN-IN.
-        domain = (aDomain <= DEF_MIN_DOMAIN) ? aDomain : DEF_DOMAIN;
+        initializeFrame();
 
-        frame = new JFrame("Mandelbrot set with " + iterations + " iterations.");
+
+    }
+
+    private void changeTitle()
+    {
+        String title = " with " + iterations + " iterations.";
+        switch(mode)
+        {
+            case 'b':
+                title = "Burning Ship Fractal".concat(title);
+                break;
+            case 'j':
+                String julia = "Julia Set (Constant c = " + juliaSetConst + ")";
+                title = julia.concat(title);
+                break;
+            case 'm':
+            default:
+                title = " Mandelbrot Set".concat(title);
+                break;
+        }
+        frame.setTitle(title);
+    }
+
+    private void initializeFrame()
+    {
+        frame = new JFrame("Mandelbrot Set with " + iterations + " iterations.");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(width, height);
 
         set = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        drawMandelBrotSet();
+        drawFractal();
         frame.add(this);
         frame.setVisible(true);
         
     }
 
-    
-    public void drawMandelBrotSet()
+    public void drawFractal()
     {
         for(int i = 0; i < width; i++)
             for(int j = 0; j < height; j++)
             {
-                double realAKA_X = ((double)i - ((double)width/2.0d))/((double)width/domain)-xOffset;
-                double imaginaryAKA_Y = (((double)height/2.0d) - (double)j)/((double)height/domain)-yOffset;
+                double realAKA_X = (((double)i - ((double)width/2.0d))/((double)width/domain))-xOffset;
+                double imaginaryAKA_Y = (((double)j - ((double)height/2.0d))/((double)height/domain))-yOffset;
                 /*
                 ComplexNumber   prevZ   = new ComplexNumber(0,0),
                                 currZ   = new ComplexNumber(0,0),
                                 c       = new ComplexNumber(realAKA_X, imaginaryAKA_Y);
                 */
-                int divergenceConfirmingPt = recursivelyFindDivergencePoint(new ComplexNumber(realAKA_X, imaginaryAKA_Y), COMPLEX_ZERO, 0, iterations);
-                /*for(int k = 0; k < (iterations-1); k++)
-                {
-                    currZ = ComplexNumber.add(ComplexNumber.multiply(prevZ, prevZ), c);
-                    prevZ = currZ;
-                    if(ComplexNumber.absoluteValueOf(currZ)>2)
-                    {
-                        divergenceConfirmingPt = k;
-                        break;
-                    }
-                }*/
+                int divergenceConfirmingPt = 0; //Given initial value so that compiler will stop complaining.
+                switch(mode)
+				{
+				
+                    case 'b':
+                        divergenceConfirmingPt = recursiveBurningShipDivergencePoint(new ComplexNumber(realAKA_X, imaginaryAKA_Y), new ComplexNumber(Math.abs(realAKA_X), Math.abs(imaginaryAKA_Y)), 1, iterations);
+						break;
+					case 'j':
+						ComplexNumber firstZ = new ComplexNumber(realAKA_X, imaginaryAKA_Y);
+						firstZ = functionOfZ(firstZ, juliaSetConst);
+						divergenceConfirmingPt =   recursiveMandelbrotAndJuliaDivergencePoint(juliaSetConst, firstZ, 1, iterations);
+						break;
+					case 'm':
+                    default:
+                   		divergenceConfirmingPt = recursiveMandelbrotAndJuliaDivergencePoint(new ComplexNumber(realAKA_X, imaginaryAKA_Y), COMPLEX_ZERO, 0, iterations);
+						break;
+                    
+                }
 
-                
-                set.setRGB(i, j, getHexRGBFromIterationCount(divergenceConfirmingPt, iterations, hexRGBSeed));
+                set.setRGB(i, j, getHexRGBFromIterationCount(divergenceConfirmingPt, iterations));
             }
     }
 
-    private static int recursivelyFindDivergencePoint(ComplexNumber c, ComplexNumber z, int currIteration, int maxIterations)
+    private static int recursiveMandelbrotAndJuliaDivergencePoint(ComplexNumber c, ComplexNumber z, int currIteration, int maxIterations)
     {
         if(currIteration==maxIterations || ComplexNumber.absoluteValueOf(z)>2)
             return currIteration;
-        return recursivelyFindDivergencePoint(c, functionOfZ(z, c), currIteration+1, maxIterations);
+        return recursiveMandelbrotAndJuliaDivergencePoint(c, functionOfZ(z, c), currIteration+1, maxIterations);
     }
 
-    private static ComplexNumber functionOfZ(ComplexNumber z, ComplexNumber constInit)
+	private static int recursiveBurningShipDivergencePoint(ComplexNumber c, ComplexNumber z, int currIteration, int maxIterations)
+	{
+		if(currIteration==maxIterations || ComplexNumber.absoluteValueOf(z)>2)
+			return currIteration;
+        z = new ComplexNumber(Math.abs(z.getReal()), Math.abs(z.getImaginary()));
+		return recursiveBurningShipDivergencePoint(c, functionOfZ(z, c), currIteration+1, maxIterations);
+	}
+
+    private static ComplexNumber functionOfZ(ComplexNumber z, ComplexNumber constC)
     {
-        return ComplexNumber.add(ComplexNumber.multiply(z, z), constInit);
+        return ComplexNumber.add(ComplexNumber.multiply(z, z), constC);
     }
     
 
-    private static int getHexRGBFromIterationCount(int divergencePoint, int iterationLimit, long aHexRGBSeed)
+    private static int getHexRGBFromIterationCount(int divergencePoint, int iterationLimit)
     {
-        if(divergencePoint==iterationLimit) return 0xFFFFFF;
+        if(divergencePoint==iterationLimit) return 0x000000;
         double ratio = (double)divergencePoint/(double)iterationLimit;
-        return (((int)((ratio)*(double)aHexRGBSeed*16d)));
+        return Color.HSBtoRGB((float)ratio, 1f, 1f); 
     }
     
     
     public void printGraphStatistics()
     {
+        System.out.println("Origin Coordinates:\n\t" +
+                           "Real Axis (X Axis): x =\t\t" + (-xOffset) + "\n\t" +
+                           "Imaginary Axis (Y Axis): y =\t" + (-yOffset));
+                           
         System.out.println("Graph domain:\n\t"+
-                           "Real Axis (X Axis):\t\t\t" + (-xOffset - domain) + " < x < "  + (domain - xOffset) + "\n\t" +
-                           "Imaginary Axis (Y Axis):\t\t" + (-yOffset - domain) + " < y < " + (domain - yOffset) + "\n\t" +
-                           "Domain size:\t\t\t\t" + domain);
+                           "Real Axis (X Axis):\t\t" + (-xOffset - domain) + " < x < "  + (domain - xOffset) + "\n\t" +
+                           "Imaginary Axis (Y Axis):\t" + (-yOffset - domain) + " < y < " + (domain - yOffset) + "\n\t" +
+                           "Domain size:\t\t\t" + (2*domain));
     }
 
 
@@ -221,11 +352,52 @@ public class Main extends Canvas
     @Override
     public void repaint()
     {
-        drawMandelBrotSet();
+        drawFractal();
         super.repaint();
     }
 
+    public void setIterations(int aLim) {
+        iterations = (aLim>=DEF_MIN_ITERATION_AMT && aLim<=DEF_MAX_ITERATION_AMT) ? aLim : DEF_ITERATION_AMT;
+    }
 
 
+    public void setWidth(int aWidth) {
+        width = (aWidth>=DEF_MIN_WIDTH) ? aWidth : DEF_WIDTH;
+    }
+
+
+    public void setHeight(int aHeight) {
+        height = (aHeight >= DEF_MIN_HEIGHT) ? aHeight : DEF_HEIGHT;
+    }
+
+    public void setDomain(double aDomain) {
+        domain = (aDomain <= DEF_MIN_DOMAIN) ? aDomain : DEF_DOMAIN;
+    }
+
+
+    public void setxOffset(double xOffset) {
+        this.xOffset = xOffset;
+    }
+
+
+    public void setyOffset(double yOffset) {
+        this.yOffset = yOffset;
+    }
+
+
+    public void setSet(BufferedImage set) {
+        this.set = set;
+    }
+
+
+    public void setMode(char mode) {
+        this.mode = mode;
+    }
+
+    public void defaultZoomAndOffset()
+    {
+        xOffset = yOffset = 0d;
+        domain = (mode=='b') ? 3.75d : 3d;
+    }
 
 }

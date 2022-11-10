@@ -21,7 +21,7 @@ Choose whether to render in color or monochromatically. Should have negligible-t
 
 ### Change Constant C (Specific to rendering the Julia Set)
 
-Set the constant C in Julia Set f(z) = z<sub>n-1</sub><sup>2</sup> + c, where z<sub>0</sub> is the Complex Number corresponding to its point on the complex plane.
+Set the constant C in Julia Set f(z<sub>n</sub>) = z<sub>n-1</sub><sup>2</sup> + c, where z<sub>0</sub> is the Complex Number corresponding to its point on the complex plane.
 
 ### 
 

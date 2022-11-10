@@ -37,6 +37,7 @@ public class Main extends Canvas
     double domain, xOffset, yOffset;
     BufferedImage set;
     char mode;
+    boolean inColor;
     ComplexNumber juliaSetConst;
 
     public static void main(String[] args) //Argument syntax is $1 = square window length $2 = number of iterations,  $3 = graph domain, $4 = hexRGB seed. (java Main <<squareWindowLength>> <<numIterations>> <<graph domain as a doubleing point number>> <<Hexadecimal RGB value as seed>>)
@@ -49,17 +50,24 @@ public class Main extends Canvas
 
             char keycode = userChooseMenuMode(m);
 
-            if(m.mode=='j' && keycode=='c')
+            if(m.mode=='j' && keycode=='k')
             {
                 setJuliaConst(m);
                 continue;
+            }
+
+            if(keycode=='c')
+            {
+                userChooseColorMode(m);
+                continue;
+
             }
 
             switch(keycode)
             {
                 case 'q':
                     quit = true;
-                    System.out.println("Thank you for your time! Close the GUI, too, to fully close the program.");
+                    System.out.println("Thank you for your time!");
                     continue;
                 case 'i':
                     userChangeIterationCount(m);
@@ -89,6 +97,29 @@ public class Main extends Canvas
         //If loop finished, then program closed.
         keyboard.close();
         System.exit(0);
+    }
+
+    private static void userChooseColorMode(Main m)
+    {
+        boolean invalidEntry = true;
+        while(invalidEntry)
+        {
+            invalidEntry = false;
+            System.out.println("Render in color or monochromatically? (Enter \"color\" or \"mono\"): ");
+            String colorChangePrompt = keyboard.nextLine();
+            if(colorChangePrompt.equalsIgnoreCase("color"))
+                m.inColor = true;
+            
+            else if(colorChangePrompt.equalsIgnoreCase("mono"))
+                m.inColor = false;
+            else
+            {
+                System.out.println("Invalid entry. Please enter either, \"color\" for color render, or \"mono\" for black and white render.");
+                invalidEntry = true;
+                continue;
+            }
+            m.repaint();
+        }
     }
 
     private static void userNavigateMode(Main m)
@@ -168,11 +199,11 @@ public class Main extends Canvas
         {
             if(m.mode=='j')
                 System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
-                "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit , \'c\' = change Julia set constant, C" +
+                "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'k\' = change Julia set constant (C) , \'c\' = change color mode , \'q\' = quit\n" +
                 "Enter character keycode: ");
             else
                 System.out.print("\nEnter the character keycode of what command mode you would like to enter. Options include...\n" + 
-                            "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'q\' = quit\n" +
+                            "\'m\' = Change fractal mode , \'i\' = Change iteration count , \'n\' = Navigate current fractal , \'c\' = change color mode , \'q\' = quit\n" +
                             "Enter character keycode: ");
             
             String modeEntry = keyboard.next();
@@ -193,7 +224,7 @@ public class Main extends Canvas
         boolean invalidEntry = true;
         while(invalidEntry)
         {
-            System.out.print("What fractal mode? Options include: \"mandelbrot\" , \"julia\", \"burning ship\". (More coming soon!)\nEnter mode name: ");
+            System.out.print("What fractal mode? Options include: \"mandelbrot\" , \"julia\", \"burning ship\" , (OR \"back\" to go back to main menu). (More coming soon!)\nEnter mode name: ");
             String prompt = keyboard.nextLine().toLowerCase();
             switch(prompt)
             {
@@ -211,6 +242,9 @@ public class Main extends Canvas
                 case "julia":
                     m.mode = prompt.charAt(0);
                     setJuliaConst(m);
+                    invalidEntry = false;
+                    continue;
+                case "back":
                     invalidEntry = false;
                     continue;
                 default:
@@ -285,11 +319,11 @@ public class Main extends Canvas
         xOffset = anXOffset;
         yOffset = aYOffset;
         juliaSetConst = DEFAULT_JULIA_SET_CONST;
+        inColor = true;
         setWidth(aWidth);
         setHeight(aHeight);
         setIterations(numIterations);
-        setDomain(aDomain);
-        
+        setDomain(aDomain); 
         initializeFrame();
 
 
@@ -360,7 +394,7 @@ public class Main extends Canvas
                     
                 }
 
-                set.setRGB(i, j, getHexRGBFromIterationCount(divergenceConfirmingPt, iterations));
+                set.setRGB(i, j, getHexRGBFromIterationCount(divergenceConfirmingPt, iterations, inColor));
             }
     }
 
@@ -385,11 +419,18 @@ public class Main extends Canvas
     }
     
 
-    private static int getHexRGBFromIterationCount(int divergencePoint, int iterationLimit)
+    private static int getHexRGBFromIterationCount(int divergencePoint, int iterationLimit, boolean inColor)
     {
         if(divergencePoint==iterationLimit) return 0x000000;
         double ratio = (double)divergencePoint/(double)iterationLimit;
-        return Color.HSBtoRGB((float)ratio, 1f, 1f); 
+        int channels =(int)(ratio*(double)0x100);
+        int ret = ((channels&0xFF)<<16) | ((channels&0xFF)<<8) | ((channels&0xFF));
+
+        //Monochromatic render
+        if(!inColor)
+            return ret; 
+        else
+            return Color.HSBtoRGB((float)ratio, 1f, 1f); 
     }
     
     
@@ -469,3 +510,4 @@ public class Main extends Canvas
     }
 
 }
+

@@ -1,4 +1,4 @@
-# MandelbrotRender
+# A Java AWT and Swing Complex Plane Fractal Renderer
 
 Renders an image of of the mandelbrot set using Java's Swing and AWT library.
 Navigable using CLI commands during runtime. Image is re-rendered based on the
